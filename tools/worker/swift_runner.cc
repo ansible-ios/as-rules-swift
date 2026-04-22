@@ -21,6 +21,7 @@
 #include "tools/common/process.h"
 #include "tools/common/temp_file.h"
 #include "tools/worker/output_file_map.h"
+#include "tools/worker/pcm_hermetic_runner.h"
 
 bool ArgumentEnablesWMO(const std::string &arg) {
   return arg == "-wmo" || arg == "-whole-module-optimization" ||
@@ -111,7 +112,8 @@ SwiftRunner::SwiftRunner(const std::vector<std::string> &args,
       index_import_path_(index_import_path),
       force_response_file_(force_response_file),
       is_dump_ast_(false),
-      file_prefix_pwd_is_dot_(false) {
+      file_prefix_pwd_is_dot_(false),
+      hermetic_pcm_(false) {
   args_ = ProcessArguments(args);
 }
 
@@ -125,8 +127,10 @@ int SwiftRunner::Run(std::ostream *stderr_stream, bool stdout_to_stderr) {
     std::filesystem::remove(swift_source_info_path_);
   }
 
-  int exit_code = RunSubProcess(
-      args_, &job_env_, stderr_stream, stdout_to_stderr);
+  int exit_code =
+      hermetic_pcm_
+          ? RunHermeticPcm(args_, stderr_stream)
+          : RunSubProcess(args_, &job_env_, stderr_stream, stdout_to_stderr);
 
   if (exit_code != 0) {
     return exit_code;
@@ -364,6 +368,8 @@ bool SwiftRunner::ProcessArgument(
         changed = true;
       } else if (StripPrefix("-global-index-store-import-path=", new_arg)) {
         changed = true;
+      } else if (new_arg == "-hermetic-pcm") {
+        changed = true;
       } else {
         // TODO(allevato): Report that an unknown wrapper arg was found and give
         // the caller a way to exit gracefully.
@@ -429,6 +435,8 @@ std::vector<std::string> SwiftRunner::ParseArguments(Iterator itr) {
         file_prefix_pwd_is_dot_ = true;
       } else if (arg == "-emit-swiftsourceinfo") {
         emit_swift_source_info_ = true;
+      } else if (arg == "-hermetic-pcm") {
+        hermetic_pcm_ = true;
       }
     } else {
       if (arg == "-output-file-map") {

@@ -1,3 +1,12 @@
+# as-rules-swift
+
+Ansible Messenger — правила Bazel для Swift.
+
+> [!NOTE]
+> **Происхождение кода.** Форк [bazelbuild/rules_swift](https://github.com/bazelbuild/rules_swift), который сопровождает проект Ansible Messenger. Сведения об авторах и лицензиях приведены в исходной документации.
+
+## Документация исходного проекта
+
 # Swift Rules for [Bazel](https://bazel.build)
 
 [![Build status](https://badge.buildkite.com/d562b11425e192a8f6ba9c43715bc8364985bccf54e4b9194a.svg?branch=main)](https://buildkite.com/bazel/rules-swift-swift)
